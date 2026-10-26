@@ -1,0 +1,80 @@
+import { BaseProviderAdapter } from "./base.adapter";
+import { ProviderCode, StandardGameMetadata } from "../types";
+
+export class PGSoftAdapter extends BaseProviderAdapter {
+  readonly code: ProviderCode = "pgsoft";
+  readonly name = "PG Soft (Pocket Games)";
+
+  readonly defaultCatalog: StandardGameMetadata[] = [
+    {
+      externalId: "pg_fortune_tiger",
+      slug: "fortune-tiger",
+      title: "Fortune Tiger",
+      category: "slots",
+      providerCode: "pgsoft",
+      thumbnail: "https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?w=500&auto=format&fit=crop&q=80",
+      rtp: 96.81,
+      volatility: "MEDIUM",
+      minBet: 0.50,
+      maxBet: 500.0,
+      isDemoAvailable: true,
+      status: "AVAILABLE_DEMO",
+    },
+    {
+      externalId: "pg_fortune_rabbit",
+      slug: "fortune-rabbit",
+      title: "Fortune Rabbit",
+      category: "slots",
+      providerCode: "pgsoft",
+      thumbnail: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=500&auto=format&fit=crop&q=80",
+      rtp: 96.75,
+      volatility: "MEDIUM",
+      minBet: 0.50,
+      maxBet: 500.0,
+      isDemoAvailable: true,
+      status: "AVAILABLE_DEMO",
+    },
+    {
+      externalId: "pg_fortune_ox",
+      slug: "fortune-ox",
+      title: "Fortune Ox",
+      category: "slots",
+      providerCode: "pgsoft",
+      thumbnail: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=500&auto=format&fit=crop&q=80",
+      rtp: 96.75,
+      volatility: "MEDIUM",
+      minBet: 0.50,
+      maxBet: 500.0,
+      isDemoAvailable: true,
+      status: "AVAILABLE_DEMO",
+    },
+    {
+      externalId: "pg_fortune_dragon",
+      slug: "fortune-dragon",
+      title: "Fortune Dragon",
+      category: "slots",
+      providerCode: "pgsoft",
+      thumbnail: "https://images.unsplash.com/photo-1577493340887-b7bfff550145?w=500&auto=format&fit=crop&q=80",
+      rtp: 96.74,
+      volatility: "MEDIUM",
+      minBet: 0.50,
+      maxBet: 500.0,
+      isDemoAvailable: true,
+      status: "AVAILABLE_DEMO",
+    },
+    {
+      externalId: "pg_fortune_mouse",
+      slug: "fortune-mouse",
+      title: "Fortune Mouse",
+      category: "slots",
+      providerCode: "pgsoft",
+      thumbnail: "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=500&auto=format&fit=crop&q=80",
+      rtp: 96.96,
+      volatility: "MEDIUM",
+      minBet: 0.50,
+      maxBet: 500.0,
+      isDemoAvailable: true,
+      status: "AVAILABLE_DEMO",
+    },
+  ];
+}

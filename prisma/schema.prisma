@@ -1,0 +1,480 @@
+// Prisma Schema for Apex Betting & Casino Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. ACCOUNTS & AUTHENTICATION
+// ==========================================
+
+model User {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  username           String              @unique
+  passwordHash       String
+  role               String              @default("USER") // USER, SUPPORT, ADMIN, SUPER_ADMIN
+  isEmailVerified    Boolean             @default(true)
+  isSuspended        Boolean             @default(false)
+  suspensionReason   String?
+  mfaEnabled         Boolean             @default(false)
+  mfaSecret          String?
+  birthDate          DateTime?
+  avatarUrl          String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  wallet             Wallet?
+  sessions           Session[]
+  gameSessions       GameSession[]
+  gameRounds         DemoGameRound[]
+  bets               Bet[]
+  tickets            SupportTicket[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  compliance         ComplianceSettings?
+
+  @@index([role])
+  @@index([email])
+  @@index([username])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model ComplianceSettings {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique
+  dailyDepositLimit       Float?
+  sessionTimeLimitMinutes Int?
+  isSelfExcluded          Boolean   @default(false)
+  selfExcludedUntil       DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 2. VIRTUAL WALLET & LEDGER
+// ==========================================
+
+model Wallet {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+  demoBalance           Float               @default(10000.00)
+  currency              String              @default("BRL")
+  totalDepositedVirtual Float               @default(10000.00)
+  totalWithdrawnVirtual Float               @default(0.00)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          WalletTransaction[]
+
+  @@index([userId])
+}
+
+model WalletTransaction {
+  id            String   @id @default(uuid())
+  walletId      String
+  type          String   // FAUCET_CREDIT, CASINO_BET, CASINO_WIN, SPORTS_BET, SPORTS_WIN, SPORTS_REFUND, ADMIN_ADJUSTMENT
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  referenceId   String?  // betId or roundId
+  description   String
+  createdAt     DateTime @default(now())
+
+  wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ==========================================
+// 3. GAME PROVIDERS & INTEGRATIONS
+// ==========================================
+
+model Provider {
+  id               String               @id @default(uuid())
+  code             String               @unique // pragmatic, pgsoft, evolution, spribe, bgaming, netent, playtech, aggregator, inhouse
+  name             String
+  description      String?
+  logoUrl          String?
+  status           String               @default("AWAITING_CREDENTIALS") // AVAILABLE_DEMO, CONFIGURED, AWAITING_CREDENTIALS, AWAITING_AUTHORIZATION, REGION_RESTRICTED, TEMPORARILY_UNAVAILABLE
+  isEnabled        Boolean              @default(true)
+  sandboxSupported Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  credentials      ProviderCredentials?
+  integration      ProviderIntegration?
+  games            Game[]
+  syncLogs         ProviderSyncLog[]
+
+  @@index([code])
+}
+
+model ProviderCredentials {
+  id           String    @id @default(uuid())
+  providerId   String    @unique
+  apiKey       String?
+  apiSecret    String?
+  endpointUrl  String?
+  ipWhitelist  String?
+  environment  String    @default("SANDBOX") // SANDBOX, PRODUCTION
+  lastTestedAt DateTime?
+  testStatus   String?   // SUCCESS, FAILED, UNTESTED
+  testMessage  String?
+  updatedAt    DateTime  @updatedAt
+
+  provider     Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model ProviderIntegration {
+  id           String   @id @default(uuid())
+  providerId   String   @unique
+  adapterName  String
+  version      String   @default("1.0.0")
+  capabilities String   // JSON string of supported features
+  updatedAt    DateTime @updatedAt
+
+  provider     Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model ProviderSyncLog {
+  id              String   @id @default(uuid())
+  providerId      String
+  status          String   // SUCCESS, FAILURE
+  totalGamesFound Int      @default(0)
+  newGamesAdded   Int      @default(0)
+  updatedGames    Int      @default(0)
+  errorMessage    String?
+  syncedAt        DateTime @default(now())
+
+  provider        Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+}
+
+// ==========================================
+// 4. CASINO GAMES CATALOG & SESSIONS
+// ==========================================
+
+model GameCategory {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  icon      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  games     Game[]
+
+  @@index([slug])
+}
+
+model Game {
+  id               String          @id @default(uuid())
+  providerId       String
+  externalId       String?
+  slug             String          @unique
+  title            String
+  categoryId       String
+  bannerUrl        String?
+  thumbnail        String?
+  demoUrl          String?
+  isDemoAvailable  Boolean         @default(true)
+  isOriginal       Boolean         @default(false)
+  status           String          @default("AVAILABLE_DEMO") // AVAILABLE_DEMO, CONFIGURED, AWAITING_CREDENTIALS, AWAITING_AUTHORIZATION, REGION_RESTRICTED, TEMPORARILY_UNAVAILABLE
+  rtp              Float           @default(96.5)
+  volatility       String          @default("MEDIUM") // LOW, MEDIUM, HIGH, VERY_HIGH
+  minBet           Float           @default(0.50)
+  maxBet           Float           @default(1000.00)
+  timesPlayed      Int             @default(0)
+  isFeatured       Boolean         @default(false)
+  isHot            Boolean         @default(false)
+  isNew            Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  provider         Provider        @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  category         GameCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sessions         GameSession[]
+
+  @@index([providerId])
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model GameSession {
+  id           String          @id @default(uuid())
+  userId       String
+  gameId       String
+  sessionToken String          @unique
+  status       String          @default("ACTIVE") // ACTIVE, CLOSED
+  totalRounds  Int             @default(0)
+  totalWagered Float           @default(0.00)
+  totalPayout  Float           @default(0.00)
+  startedAt    DateTime        @default(now())
+  endedAt      DateTime?
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game         Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  rounds       DemoGameRound[]
+
+  @@index([userId])
+  @@index([gameId])
+}
+
+model DemoGameRound {
+  id                String       @id @default(uuid())
+  gameSessionId     String?
+  userId            String
+  gameType          String       // CRASH, MINES, PLINKO, ROULETTE, BLACKJACK, DICE
+  betAmount         Float
+  multiplier        Float        @default(0.00)
+  payout            Float        @default(0.00)
+  resultDetailsJson String       // JSON details of card, mines grid, wheel stop, etc.
+  serverSeed        String
+  clientSeed        String?
+  nonce             Int          @default(1)
+  createdAt         DateTime     @default(now())
+
+  session           GameSession? @relation(fields: [gameSessionId], references: [id], onDelete: SetNull)
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameType])
+  @@index([createdAt])
+}
+
+// ==========================================
+// 5. SPORTSBOOK & VIRTUAL BETTING
+// ==========================================
+
+model Sport {
+  id           String        @id @default(uuid())
+  slug         String        @unique
+  name         String
+  icon         String
+  order        Int           @default(0)
+  isActive     Boolean       @default(true)
+
+  competitions Competition[]
+  events       SportEvent[]
+
+  @@index([slug])
+}
+
+model Competition {
+  id       String       @id @default(uuid())
+  sportId  String
+  name     String
+  country  String
+  logoUrl  String?
+  isActive Boolean      @default(true)
+
+  sport    Sport        @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  events   SportEvent[]
+
+  @@index([sportId])
+}
+
+model SportEvent {
+  id            String       @id @default(uuid())
+  competitionId String
+  sportId       String
+  homeTeam      String
+  awayTeam      String
+  homeScore     Int          @default(0)
+  awayScore     Int          @default(0)
+  status        String       @default("UPCOMING") // UPCOMING, LIVE, FINISHED, CANCELLED, POSTPONED
+  isLive        Boolean      @default(false)
+  currentPeriod String?      // 1H, 2H, HT, Q1, Q2, Set 1
+  currentMinute Int?
+  startTime     DateTime
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  competition   Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  sport         Sport        @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  markets       Market[]
+  selections    BetSelection[]
+
+  @@index([sportId])
+  @@index([competitionId])
+  @@index([status])
+  @@index([isLive])
+}
+
+model Market {
+  id         String         @id @default(uuid())
+  eventId    String
+  key        String         // 1X2, OVER_UNDER_2_5, BOTH_TEAMS_SCORE, HANDICAP
+  name       String
+  status     String         @default("ACTIVE") // ACTIVE, SUSPENDED, SETTLED
+  resultKey  String?
+  updatedAt  DateTime       @updatedAt
+
+  event      SportEvent     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  odds       Odd[]
+  selections BetSelection[]
+
+  @@index([eventId])
+}
+
+model Odd {
+  id         String         @id @default(uuid())
+  marketId   String
+  label      String         // "1", "X", "2", "Mais de 2.5", "Sim", "Não"
+  value      Float          // e.g. 1.85
+  isActive   Boolean        @default(true)
+  isWinning  Boolean?
+
+  market     Market         @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  selections BetSelection[]
+
+  @@index([marketId])
+}
+
+model Bet {
+  id              String         @id @default(uuid())
+  userId          String
+  type            String         @default("SINGLE") // SINGLE, MULTIPLE
+  totalStake      Float
+  totalOdds       Float
+  potentialReturn Float
+  actualReturn    Float          @default(0.00)
+  status          String         @default("PENDING") // PENDING, WON, LOST, CANCELLED, CASHED_OUT
+  createdAt       DateTime       @default(now())
+  settledAt       DateTime?
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  selections      BetSelection[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model BetSelection {
+  id             String     @id @default(uuid())
+  betId          String
+  eventId        String
+  marketId       String
+  oddId          String
+  eventName      String
+  marketName     String
+  selectionLabel String
+  oddValue       Float
+  status         String     @default("PENDING") // PENDING, WON, LOST, VOID
+
+  bet            Bet        @relation(fields: [betId], references: [id], onDelete: Cascade)
+  event          SportEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  market         Market     @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  odd            Odd        @relation(fields: [oddId], references: [id], onDelete: Cascade)
+
+  @@index([betId])
+  @@index([eventId])
+}
+
+// ==========================================
+// 6. SUPPORT & NOTIFICATIONS
+// ==========================================
+
+model SupportTicket {
+  id        String          @id @default(uuid())
+  userId    String
+  subject   String
+  category  String          // CASINO, SPORTS, WALLET, ACCOUNT, TECHNICAL
+  priority  String          @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status    String          @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id         String        @id @default(uuid())
+  ticketId   String
+  senderId   String
+  senderRole String        // USER, SUPPORT, ADMIN
+  message    String
+  createdAt  DateTime      @default(now())
+
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // SYSTEM, WALLET, BET_RESULT, PROMO
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ==========================================
+// 7. SYSTEM SETTINGS & AUDIT LOGS
+// ==========================================
+
+model SystemSettings {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorId     String?
+  actorRole   String?
+  action      String   // LOGIN, BET_PLACED, FAUCET_USED, PROVIDER_UPDATED, USER_SUSPENDED, SETTINGS_CHANGED
+  entity      String   // USER, PROVIDER, GAME, BET, SETTINGS
+  entityId    String?
+  ipAddress   String?
+  detailsJson String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}

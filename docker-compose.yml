@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apex_gaming_platform
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super-secret-apex-jwt-key-minimum-32-chars-long-development
+      - GAME_PROVIDER_MODE=MOCK_SIMULATOR
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    volumes:
+      - sqlite_data:/app/prisma
+
+  redis:
+    image: redis:7-alpine
+    container_name: apex_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  sqlite_data:
+  redis_data:
