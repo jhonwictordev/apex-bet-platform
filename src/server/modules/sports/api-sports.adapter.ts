@@ -217,8 +217,8 @@ export class ApiSportsAdapter implements ISportsProviderAdapter {
         dailyRequestsLimit: quota.dailyLimit,
         requiresKey: true,
         keyConfigured: false,
-        message: "Chave individual API-SPORTS ausente. Obtenha sua chave gratuita em https://dashboard.api-sports.io/",
-        signupUrl: "https://dashboard.api-sports.io/",
+        message: "Chave individual API-SPORTS ausente. Obtenha sua chave gratuita em https://dashboard.api-football.com/register",
+        signupUrl: "https://dashboard.api-football.com/register",
       };
     }
 
@@ -238,7 +238,7 @@ export class ApiSportsAdapter implements ISportsProviderAdapter {
       requiresKey: true,
       keyConfigured: true,
       message: test.message,
-      signupUrl: "https://dashboard.api-sports.io/",
+      signupUrl: "https://dashboard.api-football.com/register",
     };
   }
 

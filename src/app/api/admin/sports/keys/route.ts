@@ -14,8 +14,8 @@ export async function GET() {
         okResponse({
           configured: false,
           maskedKey: null,
-          signupUrl: "https://dashboard.api-sports.io/",
-          instructions: "Cadastre-se gratuitamente em https://dashboard.api-sports.io/ para obter sua chave de 100 requisições/dia.",
+          signupUrl: "https://dashboard.api-football.com/register",
+          instructions: "Cadastre-se gratuitamente em https://dashboard.api-football.com/register para obter sua chave de 100 requisições/dia.",
         })
       );
     }
@@ -28,7 +28,7 @@ export async function GET() {
         configured: true,
         maskedKey,
         health,
-        signupUrl: "https://dashboard.api-sports.io/",
+        signupUrl: "https://dashboard.api-football.com/register",
       })
     );
   } catch (error: any) {

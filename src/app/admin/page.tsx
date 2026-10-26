@@ -789,13 +789,13 @@ export default function AdminDashboardPage() {
                     </ol>
 
                     <a
-                      href="https://dashboard.api-sports.io/"
+                      href="https://dashboard.api-football.com/register"
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs font-black text-amber-300 hover:text-white underline pt-1"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Abrir Cadastro Oficial (dashboard.api-sports.io)
+                      Abrir Cadastro Oficial (dashboard.api-football.com)
                     </a>
                   </div>
                 )}
