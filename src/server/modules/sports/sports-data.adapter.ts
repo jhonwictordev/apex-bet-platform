@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ISportsDataAdapter } from "./types";
+import { SportsSyncWorker } from "./sports-sync.worker";
 
 export class SportsDataAdapter implements ISportsDataAdapter {
   private static instance: SportsDataAdapter;
@@ -36,6 +37,16 @@ export class SportsDataAdapter implements ISportsDataAdapter {
   }
 
   async getFixtures(sportSlug?: string, isLive?: boolean): Promise<any[]> {
+    // Check if we need initial sync
+    const totalCount = await prisma.sportEvent.count();
+    if (totalCount === 0) {
+      try {
+        await SportsSyncWorker.getInstance().syncAll();
+      } catch (err) {
+        console.warn("[SportsDataAdapter] Auto-sync initial run failed:", err);
+      }
+    }
+
     return await prisma.sportEvent.findMany({
       where: {
         ...(isLive !== undefined ? { isLive } : {}),
@@ -59,21 +70,38 @@ export class SportsDataAdapter implements ISportsDataAdapter {
       where: { id: eventId },
       select: {
         id: true,
+        externalId: true,
+        externalSource: true,
         homeTeam: true,
         awayTeam: true,
+        homeLogo: true,
+        awayLogo: true,
         homeScore: true,
         awayScore: true,
         isLive: true,
         currentMinute: true,
         currentPeriod: true,
         status: true,
+        lastSyncedAt: true,
       },
     });
     return event;
   }
 
   async getStatistics(eventId: string): Promise<any> {
-    // Generates realistic demonstrative stats
+    const event = await prisma.sportEvent.findUnique({
+      where: { id: eventId },
+      select: { rawPayload: true, homeScore: true, awayScore: true },
+    });
+
+    if (event?.rawPayload) {
+      try {
+        const parsed = JSON.parse(event.rawPayload);
+        if (parsed.statistics) return parsed.statistics;
+      } catch {}
+    }
+
+    // Realistic demonstrative stats
     return {
       possession: { home: 54, away: 46 },
       shotsOnTarget: { home: 6, away: 4 },

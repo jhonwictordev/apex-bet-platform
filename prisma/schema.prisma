@@ -287,34 +287,42 @@ model Sport {
 }
 
 model Competition {
-  id       String       @id @default(uuid())
-  sportId  String
-  name     String
-  country  String
-  logoUrl  String?
-  isActive Boolean      @default(true)
+  id             String       @id @default(uuid())
+  sportId        String
+  name           String
+  country        String
+  logoUrl        String?
+  externalId     String?
+  externalSource String?      // THESPORTSDB, OPENLIGADB, API_SPORTS
+  isActive       Boolean      @default(true)
 
-  sport    Sport        @relation(fields: [sportId], references: [id], onDelete: Cascade)
-  events   SportEvent[]
+  sport          Sport        @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  events         SportEvent[]
 
   @@index([sportId])
 }
 
 model SportEvent {
-  id            String       @id @default(uuid())
-  competitionId String
-  sportId       String
-  homeTeam      String
-  awayTeam      String
-  homeScore     Int          @default(0)
-  awayScore     Int          @default(0)
-  status        String       @default("UPCOMING") // UPCOMING, LIVE, FINISHED, CANCELLED, POSTPONED
-  isLive        Boolean      @default(false)
-  currentPeriod String?      // 1H, 2H, HT, Q1, Q2, Set 1
-  currentMinute Int?
-  startTime     DateTime
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id             String       @id @default(uuid())
+  competitionId  String
+  sportId        String
+  externalId     String?
+  externalSource String?      // THESPORTSDB, OPENLIGADB, API_SPORTS
+  homeTeam       String
+  awayTeam       String
+  homeLogo       String?
+  awayLogo       String?
+  homeScore      Int          @default(0)
+  awayScore      Int          @default(0)
+  status         String       @default("UPCOMING") // UPCOMING, LIVE, FINISHED, CANCELLED, POSTPONED
+  isLive         Boolean      @default(false)
+  currentPeriod  String?      // 1H, 2H, HT, Q1, Q2, Set 1
+  currentMinute  Int?
+  startTime      DateTime
+  lastSyncedAt   DateTime?
+  rawPayload     String?      // JSON data
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   competition   Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   sport         Sport        @relation(fields: [sportId], references: [id], onDelete: Cascade)
@@ -325,6 +333,8 @@ model SportEvent {
   @@index([competitionId])
   @@index([status])
   @@index([isLive])
+  @@index([externalId])
+  @@index([externalSource])
 }
 
 model Market {
@@ -476,5 +486,20 @@ model AuditLog {
 
   @@index([actorId])
   @@index([action])
+  @@index([createdAt])
+}
+
+model SportsSyncLog {
+  id             String   @id @default(uuid())
+  source         String   // THESPORTSDB, OPENLIGADB, API_SPORTS
+  endpoint       String
+  status         String   // SUCCESS, ERROR, RATE_LIMITED
+  recordsFetched Int      @default(0)
+  recordsSaved   Int      @default(0)
+  durationMs     Int      @default(0)
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  @@index([source])
   @@index([createdAt])
 }
