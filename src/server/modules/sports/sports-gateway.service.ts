@@ -166,10 +166,15 @@ export class SportsDataGateway {
       }
     }
 
-    // Priority 3: TheSportsDB (Premier League, Serie A, etc.)
+    // Priority 3: TheSportsDB (Premier League, Serie A, and Brazilian coverage)
     try {
-      const tsdbEvents = await this.theSportsDb.fetchUpcomingFixtures(limit);
-      allEvents.push(...tsdbEvents);
+      if (isBrazilian) {
+        const tsdbBr = await this.theSportsDb.fetchBrazilianFixtures(limit);
+        allEvents.push(...tsdbBr);
+      } else {
+        const tsdbEvents = await this.theSportsDb.fetchUpcomingFixtures(limit);
+        allEvents.push(...tsdbEvents);
+      }
     } catch (err) {
       console.warn("[Gateway] TheSportsDB fetch error:", err);
     }

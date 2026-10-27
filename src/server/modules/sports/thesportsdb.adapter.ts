@@ -134,6 +134,45 @@ export class TheSportsDBAdapter implements ISportsProviderAdapter {
       }));
   }
 
+  async fetchBrazilianFixtures(limit: number = 10): Promise<NormalizedSportEvent[]> {
+    const events: NormalizedSportEvent[] = [];
+
+    // 1. Next Brazilian Serie A events
+    const nextData = await this.fetchJson<{ events: any[] }>("eventsnextleague.php?id=4351", 600);
+    if (nextData && Array.isArray(nextData.events)) {
+      for (const ev of nextData.events) {
+        const norm = this.normalizeEvent(ev, "UPCOMING");
+        if (norm) events.push(norm);
+      }
+    }
+
+    // 2. Recent Brazilian Serie A / Libertadores matches
+    const pastData = await this.fetchJson<{ events: any[] }>("eventspastleague.php?id=4351", 1800);
+    if (pastData && Array.isArray(pastData.events)) {
+      for (const ev of pastData.events) {
+        const norm = this.normalizeEvent(ev, "FINISHED");
+        if (norm) events.push(norm);
+      }
+    }
+
+    // 3. Search key Brazilian clubs (Flamengo, Palmeiras, Corinthians, etc.)
+    const brClubs = ["Flamengo", "Palmeiras", "Corinthians", "Sao Paulo"];
+    for (const club of brClubs) {
+      if (events.length >= limit) break;
+      const searchData = await this.fetchJson<{ event: any[] }>(`searchevents.php?e=${club}`, 1800);
+      if (searchData && Array.isArray(searchData.event)) {
+        for (const ev of searchData.event.slice(0, 2)) {
+          const norm = this.normalizeEvent(ev, "UPCOMING");
+          if (norm && !events.some((e) => e.externalId === norm.externalId)) {
+            events.push(norm);
+          }
+        }
+      }
+    }
+
+    return events.slice(0, limit);
+  }
+
   async fetchUpcomingFixtures(limit: number = 20): Promise<NormalizedSportEvent[]> {
     const events: NormalizedSportEvent[] = [];
 
@@ -148,6 +187,16 @@ export class TheSportsDBAdapter implements ISportsProviderAdapter {
         }
       }
       if (events.length >= limit) break;
+    }
+
+    // Also include Brazilian fixtures if upcoming list is below limit
+    if (events.length < limit) {
+      const brEvents = await this.fetchBrazilianFixtures(5);
+      for (const br of brEvents) {
+        if (!events.some((e) => e.externalId === br.externalId)) {
+          events.push(br);
+        }
+      }
     }
 
     return events.slice(0, limit);

@@ -1,190 +1,177 @@
-# ⚡ Apex Bet & Casino — Plataforma Demonstrativa de Apostas e Cassino
+# Apex Bet & Casino — Next-Gen Sportsbook & Luxury Casino Platform
 
-> **AVISO DE CONFORMIDADE E JOGO RESPONSÁVEL (18+):**  
-> Esta plataforma foi desenvolvida exclusivamente para fins de **demonstração, validação tecnológica e pesquisa de arquitetura de software**. Todos os saldos, transações, jogos e eventos operam com **créditos fictícios** sem qualquer valor financeiro real. **Não há depósitos, saques, premiações monetárias ou processamento de dinheiro real.**
-
----
-
-## 🚀 1. Visão Geral do Projeto
-
-Inspirada nas referências líderes do setor (**Stake, 1win, Bet365 e Sportingbet**), a plataforma **Apex Bet & Casino** foi projetada com arquitetura modular de microsserviços/módulos desacoplados, identidade visual dark premium (`#0B0E14`, `#151A23`, `#1D2430`, `#B4FF39`), carteira virtual atômica, motor de apostas esportivas, catálogo de provedores B2B e 6 jogos originais com RNG provably fair no servidor.
-
----
-
-## 🛠️ 2. Stack Tecnológica
-
-### Frontend
-- **Framework:** Next.js 14 (App Router) + React 18 + TypeScript.
-- **Estilização:** Tailwind CSS com paleta dark premium e glow neons.
-- **Ícones & Animações:** Lucide React, Framer Motion, HTML5 Canvas.
-- **Gerenciamento de Estado:** React Context API + Hooks dedicados (`useAuth`, `useBetSlip`).
-
-### Backend
-- **Arquitetura:** Clean Architecture / Modular Gateway Pattern.
-- **Runtime:** Node.js 20+ com TypeScript.
-- **ORM & Banco de Dados:** Prisma ORM com SQLite local out-of-the-box (zero dependências externas para execução imediata) e suporte total a PostgreSQL em produção.
-- **Segurança & Criptografia:** JWT (`jose`), hashing `bcryptjs`, HMAC-SHA256 para verificação de seeds e webhooks.
-- **Testes Automatizados:** Test runner nativo `node:test` + asserções rigorosas de saldo, probabilidade e concorrência.
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-14.2.15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5.6-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Prisma-5.22-2D3748?style=for-the-badge&logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/Playwright-1.64-45ba4b?style=for-the-badge&logo=playwright" alt="Playwright" />
+  <img src="https://img.shields.io/badge/License-MIT-B8FF32?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/Security-Hardened-emerald?style=for-the-badge" alt="Security" />
+</p>
 
 ---
 
-## 🎮 3. Jogos Demonstrativos Originais (Apex Originals)
+## 🌟 Overview
 
-Todos os jogos contam com validação estrita no servidor via HMAC-SHA256:
+**Apex Bet & Casino** is a commercial-grade, full-stack web application inspired by the premier dark-luxury aesthetics of industry leaders (**Stake, 1win, Bet365, and Sportingbet**).
 
-1. **Apex Crash (`/cassino/originais/apex-crash`):**  
-   Curva exponencial de voo em tempo real desenhada via HTML5 Canvas, multiplicadores dinâmicos até 10.000x, cashout manual ou automático com parada precisa antes da explosão.
-2. **Apex Mines (`/cassino/originais/apex-mines`):**  
-   Grade 5x5 (25 peças) configurável de 1 a 24 minas, revelação de diamantes reluzentes, cálculo matemático de progressão de risco e botão de cashout imediato.
-3. **Apex Plinko (`/cassino/originais/apex-plinko`):**  
-   Pirâmide de pinos com física de queda simulada, seleção de linhas (8 a 16) e níveis de risco (Baixo, Médio, Alto) com multiplicadores de até 1.000x nas extremidades.
-4. **Roulette Royale (`/cassino/originais/apex-roulette`):**  
-   Roleta Europeia (0 a 36) autêntica, apostas internas (número pleno 36x) e externas (Vermelho/Preto, Par/Ímpar, Dúzias 3x) com animação 3D de rotação.
-5. **Blackjack VIP Pro (`/cassino/originais/apex-blackjack`):**  
-   Mesa de feltro verde com baralho de 6 decks, inteligência artificial do dealer jogando até 17 suave, suporte a *Hit* (pedir carta), *Stand* (parar) e Blackjack natural com retorno 3:2.
-6. **Apex Cyber Dice (`/cassino/originais/apex-dice`):**  
-   Controle deslizante de alvo (0 a 100), condições *Roll Over* ou *Roll Under*, cálculo em tempo real de margem da casa (1%) e chance de vitória.
+Designed for **educational and demonstrative purposes**, the platform operates on an exclusively virtual economy with simulated credits, zero monetary risk, and real-time live data feeds across global football and sports fixtures.
 
 ---
 
-## 🌐 4. Game Integration Gateway (Provedores B2B)
+## 🚀 Key Architectural Pillars
 
-Camada universal de adaptadores que unifica a comunicação com múltiplos fornecedores internacionais:
+### 1. ⚽ Real Sports Data Integration (3 Live Sources)
+The platform features an automated sports gateway and synchronization engine with cross-provider deduplication:
+- **TheSportsDB (Key `123`):** Official free public tier integration querying global sports, Premier League fixtures, and Brazilian club tournaments (`eventspastleague.php?id=4351`, `searchevents.php`), featuring high-resolution crests and venue metadata.
+- **OpenLigaDB (Keyless Public API):** High-speed feed for the German Bundesliga (1. and 2. Bundesliga) and European leagues, incorporating change-date optimization (`/getlastchangedate`) to prevent redundant round-trips.
+- **API-SPORTS (API-Football):** Individual free tier integration with automated rate-limiting budget management (100 requests/day quota tracker), masked key storage in the admin portal, and graceful fallback.
+- **Sports Deduplicator:** Intelligent fuzzy-matching engine that merges duplicate fixtures across providers while preserving higher-priority official crests and live timestamps.
 
-| Provedor | Código | Adaptador | Status Padrão | Capacidades |
-|---|---|---|---|---|
-| **Apex Originals** | `inhouse` | `InHouseDemoAdapter` | `AVAILABLE_DEMO` | Execução direta no cliente, RNG provably fair, histórico em banco |
-| **Pragmatic Play** | `pragmatic` | `PragmaticPlayAdapter` | `AWAITING_CREDENTIALS` | Sincronização de catálogo, launcher de sandbox demo oficial |
-| **PG Soft** | `pgsoft` | `PGSoftAdapter` | `AWAITING_CREDENTIALS` | Mobile-first slots (Fortune Tiger, Fortune Rabbit, Ox, Dragon) |
-| **Evolution Gaming**| `evolution`| `EvolutionAdapter` | `AWAITING_CREDENTIALS` | Live Casino (Crazy Time, Lightning Roulette, Monopoly) |
-| **Spribe** | `spribe` | `SpribeAdapter` | `AWAITING_CREDENTIALS` | Crash Games (Aviator original e jogos turbo) |
-| **BGaming** | `bgaming` | `BGamingAdapter` | `AWAITING_CREDENTIALS` | Slots dinâmicos e jogos casuais |
-| **NetEnt** | `netent` | `NetEntAdapter` | `AWAITING_CREDENTIALS` | Slots lendários (Starburst, Gonzo's Quest) |
-| **Playtech** | `playtech` | `PlaytechAdapter` | `AWAITING_CREDENTIALS` | Buffalo Blitz, Age of the Gods |
-| **B2B Aggregator** | `aggregator`| `AggregatorAdapter` | `CONFIGURED` | Gateway universal para agregação unificada multi-estúdios |
+### 2. 🎰 6 In-House Provably Fair RNG Casino Titles
+Equipped with an audit-ready HMAC-SHA256 random number generation (RNG) engine:
+- **Apex Crash:** Continuous multiplier rise with sub-second cashout mechanics.
+- **Apex Mines:** 5×5 tactical minefield with dynamic risk-adjusted payout curves.
+- **Apex Plinko:** Ballistic physics simulation with certified pyramid pin distributions (up to 1,000×).
+- **Roulette Royale:** European 37-pocket (0–36) single-zero table with interactive betting carpet.
+- **Blackjack VIP:** Multi-deck shoe with soft-17 rules, double down, and split options.
+- **Cyber Dice:** High-frequency probability slider with transparent house edge.
 
-### Operações Padronizadas dos Adaptadores
-- `getProviderStatus()`
-- `getGames()`
-- `getGameDetails()`
-- `getAuthorizedDemoLaunch()`
-- `createDemoSession()`
-- `closeDemoSession()`
-- `synchronizeCatalog()`
-- `validateCallback()`
-- `healthCheck()`
+### 3. 🎨 Dark-Luxury Design System & Microinteractions
+- **Color Tokens:** `#080B11` (Deep Space Background), `#10151E` (Surface Panels), `#19212D` (Elevated Cards), `#B8FF32` (Electric Neon Accent), and `#6DFFBE` (Mint Glow).
+- **Tabular Figures (`.tabular-nums`):** Fixed-width numerals on all betting odds, match timers, multipliers, and scoreboards to prevent layout shift during live updates.
+- **Responsive Viewport Support:** Built-in mobile touch dock (`MobileBottomNav`), collapsible sidebar navigation, and glassmorphic modals.
+- **Automated Visual Testing:** Fully audited via Playwright across Desktop (1920×1080), Laptop (1440×900), Tablet (768×1024), and Mobile (390×844).
 
----
-
-## ⚽ 5. Motor de Apostas Esportivas (Sportsbook)
-
-- **Modalidades:** Futebol, Basquete, Tênis, E-Sports (CS2), MMA, Vôlei, Futebol Americano.
-- **Mercados:** Vencedor do Encontro (1X2 / Moneyline), Total de Gols/Pontos (Mais/Menos), Ambas as Equipes Marcam (BTTS).
-- **Cupom de Apostas (Bet Slip):** Suporte a apostas Simples e Múltiplas (acumuladas/parlay) com cálculo de cotações acumuladas $\prod \text{odds}$.
-- **Liquidação Automática:** Serviço backend que processa resultados de partidas, avalia bilhetes pendentes e credita os ganhos virtuais diretamente na carteira do jogador.
-- **Cashout Antecipado:** Encerramento controlado da aposta antes do apito final.
+### 4. 🛡️ Enterprise Cybersecurity & Safety
+- **Zero Real-Money Risk:** No deposit rails, credit card inputs, banking APIs, or monetary conversions exist in the codebase.
+- **Zero Committed Secrets:** Strict `.gitignore` configuration guarantees `.env`, `.env.local`, SQLite databases, and private keys are never committed to version control.
+- **Security Headers:** Enforced via `next.config.mjs` including HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and disabled technology fingerprinting (`poweredByHeader: false`).
+- **Data Sanitization:** Passwords hashed with `bcryptjs`. Sensitive fields (`passwordHash`, `mfaSecret`) are stripped via `sanitizeUser()` before API responses are dispatched.
 
 ---
 
-## 💳 6. Carteira Virtual & Transações Atômicas
+## 📁 Repository Structure
 
-- **Saldo Fictício Inicial:** R$ 10.000,00 concedidos gratuitamente no cadastro.
-- **Faucet Automático:** Botão de recarga instantânea sempre que o usuário desejar resetar ou obter novos créditos de teste.
-- **Transações Atômicas:** Validação com bloqueio transacional (`prisma.$transaction`) que impede concorrência e saldo negativo não autorizado.
-- **Extrato Transacional Completo:** Registro imutável de apostas, ganhos, estornos e recargas com saldo anterior e posterior.
+```
+apex-bet-platform/
+├── prisma/
+│   ├── schema.prisma           # Prisma ORM schema (Users, Wallets, Bets, Sports, Games)
+│   └── seed.mjs                # Database seeder with demo accounts and games
+├── public/                     # Static brand assets and icons
+├── scripts/
+│   ├── visual-audit.mjs        # Automated Playwright multi-viewport visual test suite
+│   └── seed.mjs                # Standalone database population script
+├── src/
+│   ├── app/                    # Next.js App Router (Pages & REST API Endpoints)
+│   │   ├── admin/              # Master Administrative Console
+│   │   ├── cassino/            # Stake-inspired Casino Lobby & Game Rooms
+│   │   ├── esportes/           # Bet365/1win-inspired Editorial Sportsbook
+│   │   ├── api/                # Secure API routes (Auth, Sports, Casino, Wallet)
+│   │   ├── globals.css         # Tailwind tokens, glassmorphism & tabular figures
+│   │   └── layout.tsx          # Root layout with responsive header, dock & modals
+│   ├── components/             # Reusable Design System Component Library
+│   │   ├── casino/             # CasinoGameCard (3:4 / 4:3 Stake style cards)
+│   │   ├── home/               # HeroShowcase (Dark luxury cinematic hero)
+│   │   ├── layout/             # PremiumHeader, SidebarNavigation, MobileBottomNav
+│   │   └── sports/             # OddsDisplay, SportsEventCard, LiveScoreCard
+│   ├── context/                # Global React contexts (Auth & Bet Slip)
+│   ├── lib/                    # Core utilities, DB client, formatting & sanitizers
+│   └── server/                 # Business logic, sports adapters & RNG engines
+│       ├── core/               # Result wrappers & provably fair crypto engine
+│       └── modules/sports/     # TheSportsDB, OpenLigaDB & API-SPORTS adapters
+├── tests/                      # Automated unit and integration test suite
+├── .env.example                # Documented configuration template (no secrets)
+├── next.config.mjs             # Hardened security headers & remote image rules
+├── package.json                # Project dependencies & automation scripts
+├── SECURITY.md                 # Cybersecurity policy & vulnerability reporting
+└── tailwind.config.js          # Dark-luxury theme tokens & custom shadows
+```
 
 ---
 
-## 🛡️ 7. Painel Administrativo Master (`/admin`)
+## 🛠️ Quickstart Guide
 
-O painel administrativo restrito para contas `ADMIN` e `SUPER_ADMIN` oferece:
-1. **Dashboard & KPIs:** Total de usuários, apostas, rodadas de cassino, volume movimentado e auditoria.
-2. **Gerenciamento de Provedores:** Teste de conexão com sandboxes, sincronização de catálogos e configuração segura de credenciais mascaradas.
-3. **Gerenciador Esportivo:** Criação de novos confrontos, edição de placares ao vivo e liquidação de partidas.
-4. **Moderação de Usuários:** Pesquisa de jogadores, alteração de permissões RBAC e suspensão temporária ou definitiva de contas.
-5. **Auditoria de Segurança:** Registro de eventos sensíveis (logins, alterações de permissão, recargas).
+### Prerequisites
+- **Node.js:** `v20.x` or later
+- **npm:** `v10.x` or later
 
----
-
-## 🔑 8. Credenciais Pré-configuradas para Testes Locais
-
-| Papel | E-mail | Senha | Saldo Virtual Inicial |
-|---|---|---|---|
-| **Super Administrador** | `admin@apex.bet` | `AdminPassword123!` | R$ 100.000,00 |
-| **Suporte Técnico** | `suporte@apex.bet` | `SupportPassword123!` | R$ 50.000,00 |
-| **Jogador Demonstrativo**| `jogador@apex.bet` | `DemoPassword123!` | R$ 10.000,00 |
-
----
-
-## 💻 9. Guia de Instalação e Execução Local
-
-### Pré-requisitos
-- Node.js 18+ (recomendado 20 ou 24)
-- npm 9+
-
-### Passos de Instalação
-
+### 1. Clone & Install Dependencies
 ```bash
-# 1. Navegar até a pasta do projeto
-cd C:\Users\winc\.gemini\antigravity\scratch\apex-bet-platform
-
-# 2. Instalar dependências
+git clone https://github.com/jhonwictordev/apex-bet-platform.git
+cd apex-bet-platform
 npm install
-
-# 3. Configurar variáveis de ambiente
-cp .env.example .env
-
-# 4. Gerar o cliente Prisma e sincronizar o banco SQLite local
-npm run prisma:generate
-npm run prisma:push
-
-# 5. Executar o seeder com dados realistas
-npm run prisma:seed
-
-# 6. Rodar os testes automatizados
-npm test
-
-# 7. Iniciar a aplicação em modo de desenvolvimento ou produção
-npm run dev
-# ou
-npm run build && npm run start
 ```
 
-Acesse a aplicação no navegador em: **`http://localhost:3000`**
-
----
-
-## 🐳 10. Execução com Docker & Docker Compose
-
-Para executar a aplicação com Docker e Redis:
-
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` (the `.env` file is ignored by Git for security):
 ```bash
-docker-compose up --build -d
+cp .env.example .env
+```
+
+### 3. Initialize Database & Seed
+```bash
+# Push Prisma schema to local SQLite database
+npx prisma db push
+
+# Populate catalog with demo games, sports fixtures, and administrator
+npm run prisma:seed
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+### 5. Production Build & Start
+```bash
+npm run build
+npm start
 ```
 
 ---
 
-## 🧪 11. Relatório dos Testes Automatizados
+## 🧪 Testing & Quality Assurance
 
-Executados via `npm test` (`node:test`):
-- `✔ Crash Engine produces valid multipliers and respect house edge`
-- `✔ Mines Engine calculates exponential multiplier curve with house edge`
-- `✔ Plinko Engine drops ball and indexes correct certified slot`
-- `✔ Roulette Engine calculates accurate European 0-36 payouts`
-- `✔ Dice Engine computes fair payout multiplier with 1% house edge`
-- `✔ Virtual Wallet: Atomic transaction integrity and balance rules`
-- `✔ Sports Bet Engine: Parlay odds multiplication and settlement calculation`
+### Run Automated Unit & Integration Tests
+```bash
+npm test
+```
+The test suite validates:
+- RNG mathematical payout curves and house edges (Crash, Mines, Plinko, Roulette, Dice).
+- Real HTTP connectivity with TheSportsDB (Key `123`) and OpenLigaDB.
+- API-SPORTS rate-limiting budget and quota management.
+- Multi-source fixture deduplication and team name fuzzy matching.
+- Virtual wallet atomic balance guarantees and parlay bet calculations.
 
-**Total: 7/7 suites de teste aprovadas com 100% de sucesso.**
+### Run Automated Visual Regression Audit (Playwright)
+```bash
+node scripts/visual-audit.mjs
+```
+Captures full visual screenshots across 4 responsive viewports (`1920x1080`, `1440x900`, `768x1024`, and `390x844`).
 
 ---
 
-## 🔒 12. Checklist de Segurança e Boas Práticas
+## 🔑 Demo Credentials
 
-- [x] Zero manipulação de dinheiro real ou gateways de pagamento reais (PIX, cartões ou criptomoedas desabilitados).
-- [x] Credenciais sensíveis nunca trafegadas ou expostas ao frontend (armazenadas protegidas no backend).
-- [x] Validação estrita de maioridade (18+) no formulário de cadastro.
-- [x] Ferramentas de autoexclusão voluntária (24h, 7 dias, 30 dias, 6 meses) e limites de tempo de sessão.
-- [x] Proteção contra injeção de SQL e XSS garantida via Prisma ORM e tipagem estrita com TypeScript e Zod.
-- [x] Rate limiting e transações com isolamento de concorrência.
-- [x] Auditoria imutável de ações no modelo `AuditLog`.
+| Role | Username / Email | Password | Initial Virtual Balance |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin@apexbet.demo` | `admin123` | R$ 10.000,00 (Unlimited Faucet) |
+| **Test Player** | `jogador@apexbet.demo` | `jogador123` | R$ 10.000,00 (Unlimited Faucet) |
+
+---
+
+## ⚖️ Legal & Responsible Gaming Disclaimer
+
+This software is developed strictly for educational, technical demonstration, and portfolio purposes.
+- All currency presented on the platform is **100% virtual and fictitious**.
+- There is **no mechanism** to deposit, withdraw, or win real monetary rewards.
+- The project adheres to responsible gaming principles and is intended for adult audiences (18+).
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).

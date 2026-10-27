@@ -1,24 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useBetSlip } from "@/context/bet-slip-context";
+import { SportsEventCard } from "@/components/sports/SportsEventCard";
 import {
   Trophy,
   Activity,
   Calendar,
-  ShieldCheck,
-  ChevronRight,
   Database,
   RefreshCw,
-  ExternalLink,
-  Flame,
-  CheckCircle2,
+  Sparkles,
+  Search,
+  Filter,
 } from "lucide-react";
 
 export default function SportsbookPage() {
-  const { addSelection, selections } = useBetSlip();
-
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL"); // ALL, BRAZIL, EUROPE, LIVE
   const [fixtures, setFixtures] = useState<any[]>([]);
@@ -26,6 +21,7 @@ export default function SportsbookPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadFixtures = async () => {
     try {
@@ -67,7 +63,7 @@ export default function SportsbookPage() {
       const res = await fetch("/api/admin/sports/sync", { method: "POST" });
       const json = await res.json();
       if (res.ok) {
-        setSyncMessage(`✅ Sincronizados ${json.data?.stats?.totalSaved || 0} jogos reais!`);
+        setSyncMessage(`✅ Sincronizados ${json.data?.stats?.totalSaved || 0} confrontos reais!`);
         await loadFixtures();
         await loadStatus();
       } else {
@@ -81,8 +77,16 @@ export default function SportsbookPage() {
     }
   };
 
-  // Filter fixtures according to category tab
+  // Filter fixtures according to category tab and search term
   const filteredFixtures = fixtures.filter((f) => {
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const matchHome = (f.homeTeam || "").toLowerCase().includes(term);
+      const matchAway = (f.awayTeam || "").toLowerCase().includes(term);
+      const matchComp = (f.competition?.name || "").toLowerCase().includes(term);
+      if (!matchHome && !matchAway && !matchComp) return false;
+    }
+
     if (selectedCategory === "LIVE") return f.isLive;
     if (selectedCategory === "BRAZIL") {
       const comp = (f.competition?.name || "").toLowerCase();
@@ -110,39 +114,10 @@ export default function SportsbookPage() {
     { slug: "basquete", name: "Basquete", icon: "🏀" },
   ];
 
-  const getSourceBadge = (source?: string) => {
-    switch (source) {
-      case "THESPORTSDB":
-        return {
-          label: "Fonte: TheSportsDB (API Oficial)",
-          className: "bg-emerald-950/80 border-emerald-800 text-emerald-400",
-          dotColor: "bg-emerald-400",
-        };
-      case "OPENLIGADB":
-        return {
-          label: "Fonte: OpenLigaDB (Alemanha/Europa)",
-          className: "bg-blue-950/80 border-blue-800 text-blue-400",
-          dotColor: "bg-blue-400",
-        };
-      case "API_SPORTS":
-        return {
-          label: "Fonte: API-SPORTS (Tempo Real)",
-          className: "bg-purple-950/80 border-purple-800 text-purple-400",
-          dotColor: "bg-purple-400",
-        };
-      default:
-        return {
-          label: "Fonte: Apex Sports Gateway",
-          className: "bg-zinc-800 border-zinc-700 text-zinc-300",
-          dotColor: "bg-zinc-400",
-        };
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Real Sports Data Status Banner */}
-      <div className="bg-gradient-to-r from-brand-surface via-brand-card to-brand-surface border border-brand-border rounded-2xl p-4 md:p-5 shadow-lg space-y-3">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Real Sports Data Status Panel */}
+      <div className="bg-gradient-to-r from-brand-surface via-brand-card to-brand-surface border border-brand-border rounded-2xl p-4 md:p-5 shadow-card space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-brand-accent/10 border border-brand-accent/30 rounded-xl text-brand-accent">
@@ -150,13 +125,15 @@ export default function SportsbookPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm text-white">Integração com Dados Esportivos Reais</h3>
+                <h3 className="font-extrabold text-sm text-white font-display">
+                  Integração com Dados Esportivos Oficiais
+                </h3>
                 <span className="px-2 py-0.5 rounded-full bg-brand-accent/20 border border-brand-accent/40 text-brand-accent text-[10px] font-black uppercase">
                   Ao Vivo & Oficial
                 </span>
               </div>
               <p className="text-xs text-brand-textSecondary mt-0.5">
-                Alimentado por TheSportsDB (Key 123), OpenLigaDB e API-SPORTS. Todos os jogos, escudos e placares são dados reais de competições oficiais.
+                Alimentado por TheSportsDB (Chave Pública 123), OpenLigaDB e API-SPORTS. Jogos, escudos e dados são oriundos de competições oficiais reais.
               </p>
             </div>
           </div>
@@ -164,14 +141,14 @@ export default function SportsbookPage() {
           <div className="flex items-center gap-2 self-start md:self-center">
             {sportsStatus && (
               <div className="text-right hidden sm:block text-[11px] text-brand-textMuted mr-2">
-                <div>Partidas no Banco: <strong className="text-white">{sportsStatus.stats?.totalEventsInDb || fixtures.length}</strong></div>
-                <div>Ligas Ativas: <strong className="text-brand-accent">{sportsStatus.stats?.totalLeaguesInDb || 0}</strong></div>
+                <div>Partidas no Banco: <strong className="text-white font-mono">{sportsStatus.stats?.totalEventsInDb || fixtures.length}</strong></div>
+                <div>Ligas Ativas: <strong className="text-brand-accent font-mono">{sportsStatus.stats?.totalLeaguesInDb || 0}</strong></div>
               </div>
             )}
             <button
               onClick={handleManualSync}
               disabled={syncing}
-              className="px-3.5 py-2 bg-brand-accent text-brand-darkest hover:bg-brand-accentHover rounded-xl text-xs font-bold transition-all shadow-glow flex items-center gap-2 disabled:opacity-50"
+              className="px-3.5 py-2 bg-brand-accent text-brand-darkest hover:bg-brand-accentHover rounded-xl text-xs font-black transition-all shadow-glow flex items-center gap-2 disabled:opacity-50 active:scale-[0.98]"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Sincronizando..." : "Sincronizar APIs"}
@@ -215,62 +192,77 @@ export default function SportsbookPage() {
       {/* Sportsbook Navigation Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5 font-display">
             <Trophy className="w-7 h-7 text-brand-accent" />
             Sportsbook — Confrontos Reais
           </h1>
           <p className="text-xs text-brand-textSecondary mt-1">
-            Partidas reais de ligas internacionais e nacionais com odds dinâmicas demonstrativas e apostas virtuais instantâneas.
+            Partidas oficiais de ligas nacionais e internacionais com odds dinâmicas demonstrativas e cupom virtual integrado.
           </p>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          <button
-            onClick={() => setSelectedCategory("ALL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedCategory === "ALL"
-                ? "bg-brand-accent text-brand-darkest shadow-glow"
-                : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
-            }`}
-          >
-            Todos os Jogos
-          </button>
-          <button
-            onClick={() => setSelectedCategory("LIVE")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-              selectedCategory === "LIVE"
-                ? "bg-red-600 text-white shadow-glow"
-                : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
-            Ao Vivo
-          </button>
-          <button
-            onClick={() => setSelectedCategory("EUROPE")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedCategory === "EUROPE"
-                ? "bg-brand-accent text-brand-darkest shadow-glow"
-                : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
-            }`}
-          >
-            Bundesliga & Europa
-          </button>
-          <button
-            onClick={() => setSelectedCategory("BRAZIL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedCategory === "BRAZIL"
-                ? "bg-brand-accent text-brand-darkest shadow-glow"
-                : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
-            }`}
-          >
-            Futebol Brasileiro
-          </button>
+        {/* Search & Category Filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick Search */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-brand-textMuted absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar equipe ou liga..."
+              className="pl-8 pr-3 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-xs text-white placeholder-brand-textMuted focus:outline-none focus:border-brand-accent w-48 sm:w-56"
+            />
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <button
+              onClick={() => setSelectedCategory("ALL")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                selectedCategory === "ALL"
+                  ? "bg-brand-accent text-brand-darkest shadow-glow"
+                  : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
+              }`}
+            >
+              Todos ({fixtures.length})
+            </button>
+            <button
+              onClick={() => setSelectedCategory("LIVE")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                selectedCategory === "LIVE"
+                  ? "bg-red-600 text-white shadow-glow"
+                  : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+              Ao Vivo
+            </button>
+            <button
+              onClick={() => setSelectedCategory("EUROPE")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                selectedCategory === "EUROPE"
+                  ? "bg-brand-accent text-brand-darkest shadow-glow"
+                  : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
+              }`}
+            >
+              Bundesliga & Europa
+            </button>
+            <button
+              onClick={() => setSelectedCategory("BRAZIL")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                selectedCategory === "BRAZIL"
+                  ? "bg-brand-accent text-brand-darkest shadow-glow"
+                  : "bg-brand-surface border border-brand-border text-brand-textSecondary hover:text-white"
+              }`}
+            >
+              Futebol Brasileiro
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Sports Pills */}
+      {/* Sports Tabs Strip */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-brand-border">
         {sportsTabs.map((s) => (
           <button
@@ -305,168 +297,10 @@ export default function SportsbookPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredFixtures.map((event) => {
-            const mainMarket = event.markets?.[0];
-            const sourceBadge = getSourceBadge(event.externalSource);
-
-            return (
-              <div
-                key={event.id}
-                className="bg-brand-surface border border-brand-border rounded-2xl p-4 md:p-5 hover:border-brand-border/90 transition-all shadow-md space-y-4"
-              >
-                {/* Competition Bar & Source Origin */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-textMuted border-b border-brand-border/40 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-white">{event.sport?.name || "Futebol"}</span>
-                    <span>•</span>
-                    <span className="text-brand-textSecondary font-bold">{event.competition?.name}</span>
-                    <span className="text-brand-textMuted">({event.competition?.country || "Oficial"})</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Origin Badge */}
-                    <span
-                      className={`px-2 py-0.5 rounded border text-[10px] font-bold flex items-center gap-1.5 ${sourceBadge.className}`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${sourceBadge.dotColor}`} />
-                      {sourceBadge.label}
-                    </span>
-
-                    {event.isLive ? (
-                      <span className="px-2 py-0.5 rounded bg-red-950/80 border border-red-800 text-red-400 font-extrabold flex items-center gap-1.5 text-[10px]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        AO VIVO {event.currentPeriod ? `• ${event.currentPeriod}` : ""} {event.currentMinute ? `${event.currentMinute}'` : ""}
-                      </span>
-                    ) : (
-                      <span className="text-brand-textMuted text-[11px] flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-brand-accent" />
-                        {new Date(event.startTime).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Match Teams, Badges and Scores */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-                  <div className="lg:col-span-5 space-y-3">
-                    {/* Home Team */}
-                    <div className="flex items-center justify-between font-bold text-sm">
-                      <div className="flex items-center gap-2.5">
-                        {event.homeLogo ? (
-                          <img
-                            src={event.homeLogo}
-                            alt={event.homeTeam}
-                            className="w-6 h-6 object-contain rounded-full bg-white/5 p-0.5"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-[10px] text-brand-accent font-black">
-                            {event.homeTeam.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <span className="text-white hover:text-brand-accent transition-colors">
-                          {event.homeTeam}
-                        </span>
-                      </div>
-                      <span className="text-brand-accent font-black text-lg px-2">
-                        {event.homeScore}
-                      </span>
-                    </div>
-
-                    {/* Away Team */}
-                    <div className="flex items-center justify-between font-bold text-sm">
-                      <div className="flex items-center gap-2.5">
-                        {event.awayLogo ? (
-                          <img
-                            src={event.awayLogo}
-                            alt={event.awayTeam}
-                            className="w-6 h-6 object-contain rounded-full bg-white/5 p-0.5"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-[10px] text-brand-accent font-black">
-                            {event.awayTeam.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <span className="text-white hover:text-brand-accent transition-colors">
-                          {event.awayTeam}
-                        </span>
-                      </div>
-                      <span className="text-brand-accent font-black text-lg px-2">
-                        {event.awayScore}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Market Odds Buttons */}
-                  <div className="lg:col-span-7">
-                    {mainMarket && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-brand-textMuted uppercase font-bold tracking-wider">
-                            {mainMarket.name}
-                          </span>
-                          <Link
-                            href={`/esportes/evento/${event.id}`}
-                            className="text-[11px] font-bold text-brand-accent hover:underline flex items-center gap-1"
-                          >
-                            Radar & Estatísticas <ChevronRight className="w-3 h-3" />
-                          </Link>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {mainMarket.odds?.map((odd: any) => {
-                            const isSelected = selections.some((s) => s.oddId === odd.id);
-
-                            return (
-                              <button
-                                key={odd.id}
-                                onClick={() =>
-                                  addSelection({
-                                    eventId: event.id,
-                                    eventName: `${event.homeTeam} x ${event.awayTeam}`,
-                                    marketId: mainMarket.id,
-                                    marketName: mainMarket.name,
-                                    oddId: odd.id,
-                                    selectionLabel: odd.label,
-                                    oddValue: odd.value,
-                                  })
-                                }
-                                className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-between gap-2 ${
-                                  isSelected
-                                    ? "bg-brand-accent text-brand-darkest border-brand-accent shadow-glow"
-                                    : "bg-brand-card hover:bg-brand-cardHover border-brand-border text-brand-textSecondary hover:text-white"
-                                }`}
-                              >
-                                <span className="truncate text-left text-[11px]">{odd.label}</span>
-                                <span
-                                  className={`font-black text-xs ${
-                                    isSelected ? "text-brand-darkest" : "text-brand-accent"
-                                  }`}
-                                >
-                                  {odd.value.toFixed(2)}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="space-y-3.5">
+          {filteredFixtures.map((event) => (
+            <SportsEventCard key={event.id} event={event} />
+          ))}
         </div>
       )}
     </div>

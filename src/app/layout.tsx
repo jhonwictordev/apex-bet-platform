@@ -3,8 +3,9 @@ import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 import { BetSlipProvider } from "@/context/bet-slip-context";
 import { ComplianceBanner } from "@/components/common/ComplianceBanner";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { PremiumHeader } from "@/components/layout/PremiumHeader";
+import { SidebarNavigation } from "@/components/layout/SidebarNavigation";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { BetSlipModal } from "@/components/layout/BetSlipModal";
 
 export const metadata: Metadata = {
@@ -20,17 +21,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className="min-h-screen bg-brand-darkest text-brand-textPrimary flex flex-col antialiased selection:bg-brand-accent selection:text-brand-darkest">
+      <body className="min-h-screen bg-brand-bg text-brand-textPrimary flex flex-col antialiased selection:bg-brand-accent selection:text-brand-darkest font-sans">
         <AuthProvider>
           <BetSlipProvider>
             <ComplianceBanner />
-            <Header />
+            <PremiumHeader />
             <div className="flex-1 flex max-w-[1600px] w-full mx-auto">
-              <Sidebar />
-              <main className="flex-1 min-w-0 p-4 lg:p-6 pb-24 overflow-y-auto">
+              <SidebarNavigation />
+              <main className="flex-1 min-w-0 p-4 lg:p-6 pb-24 lg:pb-12 overflow-y-auto">
                 {children}
               </main>
             </div>
+            <MobileBottomNav />
             <BetSlipModal />
           </BetSlipProvider>
         </AuthProvider>
